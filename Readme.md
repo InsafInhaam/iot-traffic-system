@@ -6,7 +6,7 @@ This is a prototype for counting and classifying vehicles in an image using YOLO
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/yourusername/iot-traffic-system.git
+git clone https://github.com/InsafInhaam/iot-traffic-system.git
 cd iot-traffic-system
 ````
 
