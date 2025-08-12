@@ -30,7 +30,7 @@ venv\Scripts\activate     # Windows
 ### 3️⃣ Install Required Python Libraries
 
 ```bash
-pip install opencv-python numpy
+pip install -r requirements.txt
 ```
 
 ---
