@@ -8,7 +8,7 @@ from ultralytics import YOLO
 # ---------------- Config ----------------
 MODEL_NAME = "yolov3u.pt"  # small upgrade over yolov3.pt; works in Ultralytics
 CONF_THRES = 0.5
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/vehicles")  # FastAPI POST
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/vehicles/vehicles")  # FastAPI POST
 POST_EVERY_N_FRAMES = 10
 SAVE_ANNOTATED = True
 OUT_VIDEO = "output/annotated.mp4"  # set None to disable

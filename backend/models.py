@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel
+from typing import Optional, Dict
 
 
 class Vehicle(BaseModel):
-    license_plate: str
-    vehicle_type: str
-    speed: Optional[float] = None
-    timestamp: Optional[str] = None
+    timestamp: str
+    lane_counts: Dict[str, int]
+    total: int
+    emergency: bool
