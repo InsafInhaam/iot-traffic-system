@@ -5,10 +5,11 @@ This is a prototype for counting and classifying vehicles in an image using YOLO
 ---
 
 ### 1️⃣ Clone the Repository
+
 ```bash
 git clone https://github.com/InsafInhaam/iot-traffic-system.git
 cd iot-traffic-system
-````
+```
 
 ---
 
@@ -72,3 +73,4 @@ python detect.py
 
 Press **Q** to quit the live detection window.
 
+python3 preprocessing_technique.py

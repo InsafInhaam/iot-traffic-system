@@ -144,7 +144,7 @@ def detect_vehicles(image_bgr):
 
 def main():
     os.makedirs("output", exist_ok=True)
-    cap = cv2.VideoCapture("samples/image.png")  # Change to 0 for webcam
+    cap = cv2.VideoCapture("samples/video.mp4")  # Change to 0 for webcam
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1280)
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 720)
