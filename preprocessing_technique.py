@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
+from ultralytics import YOLO
 
 # ---------------- Task 1: Preprocessing (Grayscale + B/W) ----------------
-
 
 def preprocess_image(image_path):
     image = cv2.imread(image_path)
@@ -14,7 +14,6 @@ def preprocess_image(image_path):
     return image, gray, binary, blurred, edges
 
 # ---------------- Task 2: Lane Separator Logic ----------------
-
 
 def detect_lanes(image):
     h, w, _ = image.shape
@@ -66,30 +65,70 @@ def detect_vehicles(image):
     return vehicles, vehicle_counts, centers
 
 
+def detect_vehicles_yolo(image, lanes):
+    model = YOLO('yolov8n.pt')  # Load a pre-trained YOLO model
+
+    results = model(image)
+    vehicle_counts = {1: {"car": 0, "bus": 0, "truck": 0, "motorbike": 0},
+                      2: {"car": 0, "bus": 0, "truck": 0, "motorbike": 0},
+                      3: {"car": 0, "bus": 0, "truck": 0, "motorbike": 0},
+                      4: {"car": 0, "bus": 0, "truck": 0, "motorbike": 0}}
+
+    annotated = image.copy()
+
+    for r in results:
+        for box in r.boxes:
+            cls = int(box.cls[0])
+            label = model.names[cls]
+
+            if label in ["car", "bus", "truck", "motorbike"]:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                center = ((x1 + x2)//2, (y1 + y2)//2)
+
+                lane_number = find_lane_for_vehicle(center, lanes)
+                if lane_number:
+                    vehicle_counts[lane_number][label] += 1
+
+                    # Draw bounding box
+                    cv2.rectangle(annotated, (x1, y1),
+                                  (x2, y2), (255, 0, 0), 2)
+                    cv2.putText(annotated, f"{label} L{lane_number}",
+                                (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.6, (0, 255, 0), 2)
+    return annotated, vehicle_counts
+
+
 # ---------------- Execution ----------------
 if __name__ == "__main__":
-    image_path = "intersection.png"  # replace with your intersection image
+    image_path = "samples/image2.avif"  # replace with your intersection image
     image, gray, binary, blurred, edges = preprocess_image(image_path)
 
     lanes = detect_lanes(image)
 
-    vehicles, vehicle_counts, centers = detect_vehicles(image)
+    # vehicles, vehicle_counts, centers = detect_vehicles(image)
+
+    # Run YOLO
+    annotated, vehicle_counts = detect_vehicles_yolo(image, lanes)
 
     # Draw lanes
+    # for start, end in lanes:
+    #     cv2.line(image, (start, 0), (start, image.shape[0]), (0, 255, 0), 2)
     for start, end in lanes:
-        cv2.line(image, (start, 0), (start, image.shape[0]), (0, 255, 0), 2)
+        cv2.line(annotated, (start, 0),
+                 (start, annotated.shape[0]), (0, 255, 0), 2)
 
     # Draw detected vehicles and assign lane
-    for (x, y, w, h), center in zip(vehicles, centers):
-        lane_number = find_lane_for_vehicle(center, lanes)
-        cv2.rectangle(image, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        cv2.putText(image, f"Lane {lane_number}", (x, y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    # for (x, y, w, h), center in zip(vehicles, centers):
+    #     lane_number = find_lane_for_vehicle(center, lanes)
+    #     cv2.rectangle(image, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    #     cv2.putText(image, f"Lane {lane_number}", (x, y-10),
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-    print("Vehicle counts:", vehicle_counts)
+    print("Vehicle counts per lane:", vehicle_counts)
     print("Justification:", justification)
 
     # Show outputs
+    cv2.imshow("YOLO Detection", annotated)
     cv2.imshow("Original", image)
     cv2.imshow("Grayscale", gray)
     cv2.imshow("Binary", binary)
@@ -97,3 +136,6 @@ if __name__ == "__main__":
     cv2.imshow("Edges", edges)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+# test change 
