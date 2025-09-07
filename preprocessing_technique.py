@@ -4,6 +4,7 @@ from ultralytics import YOLO
 
 # ---------------- Task 1: Preprocessing (Grayscale + B/W) ----------------
 
+
 def preprocess_image(image_path):
     image = cv2.imread(image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # convert to grayscale
@@ -15,21 +16,35 @@ def preprocess_image(image_path):
 
 # ---------------- Task 2: Lane Separator Logic ----------------
 
+
 def detect_lanes(image):
     h, w, _ = image.shape
     # Divide into 4 lanes (simple assumption: equal width vertical lanes)
-    lane_width = w // 4
-    lanes = [(i * lane_width, (i+1) * lane_width) for i in range(4)]
+    # lane_width = w // 4
+    # lanes = [(i * lane_width, (i+1) * lane_width) for i in range(4)]
+    # return lanes
+    lanes = {
+        1: np.array([(0, 0), (w//4, 0), (w//4, h), (0, h)], np.int32),
+        2: np.array([(w//4, 0), (w//2, 0), (w//2, h), (w//4, h)], np.int32),
+        3: np.array([(w//2, 0), (3*w//4, 0), (3*w//4, h), (w//2, h)], np.int32),
+        4: np.array([(3*w//4, 0), (w, 0), (w, h), (3*w//4, h)], np.int32),
+        # side roads example
+        "side_road_left": np.array([(0, h//2), (w//6, h//2), (w//6, h), (0, h)], np.int32)
+    }
     return lanes
 
 # Function to check which lane a vehicle center belongs to
 
 
 def find_lane_for_vehicle(center, lanes):
-    x, _ = center
-    for i, (start, end) in enumerate(lanes):
-        if start <= x < end:
-            return i + 1  # lane numbering starts from 1
+    # x, _ = center
+    # for i, (start, end) in enumerate(lanes):
+    #     if start <= x < end:
+    #         return i + 1  # lane numbering starts from 1
+    # return None
+    for name, polygon in lanes.items():
+        if cv2.pointPolygonTest(polygon, center, False) >= 0:
+            return name
     return None
 
 
@@ -97,6 +112,14 @@ def detect_vehicles_yolo(image, lanes):
                                 0.6, (0, 255, 0), 2)
     return annotated, vehicle_counts
 
+# ---------------- Utility Functions ----------------
+
+
+def resize_for_display(image, width=960):
+    h, w = image.shape[:2]
+    scale = width / w
+    return cv2.resize(image, (width, int(h * scale)))
+
 
 # ---------------- Execution ----------------
 if __name__ == "__main__":
@@ -113,9 +136,9 @@ if __name__ == "__main__":
     # Draw lanes
     # for start, end in lanes:
     #     cv2.line(image, (start, 0), (start, image.shape[0]), (0, 255, 0), 2)
-    for start, end in lanes:
-        cv2.line(annotated, (start, 0),
-                 (start, annotated.shape[0]), (0, 255, 0), 2)
+    for polygon in lanes.values():
+        cv2.polylines(annotated, [polygon], isClosed=True,
+                      color=(0, 255, 0), thickness=2)
 
     # Draw detected vehicles and assign lane
     # for (x, y, w, h), center in zip(vehicles, centers):
@@ -129,13 +152,10 @@ if __name__ == "__main__":
 
     # Show outputs
     cv2.imshow("YOLO Detection", annotated)
-    cv2.imshow("Original", image)
-    cv2.imshow("Grayscale", gray)
-    cv2.imshow("Binary", binary)
-    cv2.imshow("Blurred", blurred)
-    cv2.imshow("Edges", edges)
+    cv2.imshow("Original", resize_for_display(image))
+    cv2.imshow("Grayscale", resize_for_display(gray))
+    cv2.imshow("Binary", resize_for_display(binary))
+    cv2.imshow("Blurred", resize_for_display(blurred))
+    cv2.imshow("Edges", resize_for_display(edges))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-
-# test change 
