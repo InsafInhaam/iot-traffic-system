@@ -100,7 +100,7 @@ def detect_vehicles_yolo(image, lanes):
 
 # ---------------- Execution ----------------
 if __name__ == "__main__":
-    image_path = "samples/image2.avif"  # replace with your intersection image
+    image_path = "samples/img1.jpg"  # replace with your intersection image
     image, gray, binary, blurred, edges = preprocess_image(image_path)
 
     lanes = detect_lanes(image)
@@ -138,4 +138,4 @@ if __name__ == "__main__":
     cv2.destroyAllWindows()
 
 
-# test change 
+# test change  
