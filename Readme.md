@@ -74,3 +74,5 @@ python detect.py
 Press **Q** to quit the live detection window.
 
 python3 preprocessing_technique.py
+
+python3 preprocessing_technique_v2.py

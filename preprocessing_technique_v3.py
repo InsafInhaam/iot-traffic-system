@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import json
 
 # ---------------- Task 1: Preprocessing ----------------
 
@@ -15,6 +16,15 @@ def preprocess_image(image_path):
 
 
 # ---------------- Task 2: Lane Separator Logic ----------------
+def load_lanes_from_config(config_path="lanes_config.json"):
+    with open(config_path, "r") as f:
+        data = json.load(f)
+    # Convert list of points → numpy arrays
+    lanes = {name: np.array(points, np.float32)
+             for name, points in data.items()}
+    return lanes
+
+
 def detect_lanes(image):
     h, w, _ = image.shape
 
@@ -56,25 +66,27 @@ justification = {
 }
 
 # ---------------- Task 4: Vehicle Detection with YOLO ----------------
+
+
 def detect_vehicles_yolo(image, lanes):
     model = YOLO('yolov8n.pt')
+    results = model(image, conf=0.5, iou=0.5)
 
-    results = model(image)
-
-    # Initialize lane counts dynamically
     vehicle_counts = {lane: {"car": 0, "bus": 0, "truck": 0,
                              "motorbike": 0} for lane in lanes.keys()}
     total_counts = {"car": 0, "bus": 0, "truck": 0, "motorbike": 0}
 
     annotated = image.copy()
 
-    # Detect and classify
     for r in results:
         for box in r.boxes:
             cls = int(box.cls[0])
             label = model.names[cls]
 
-            if label in ["car", "bus", "truck", "motorbike"]:
+            if label in ["car", "bus", "truck", "motorcycle"]:
+                if label == "motorcycle":
+                    label = "motorbike"
+
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 center = ((x1 + x2)//2, (y1 + y2)//2)
 
@@ -83,7 +95,6 @@ def detect_vehicles_yolo(image, lanes):
                     vehicle_counts[lane_name][label] += 1
                     total_counts[label] += 1
 
-                    # Draw bounding box with icon-style label
                     cv2.rectangle(annotated, (x1, y1),
                                   (x2, y2), (255, 0, 0), 2)
                     cv2.putText(annotated, f"{label} [{lane_name}]", (x1, y1-10),
@@ -91,26 +102,18 @@ def detect_vehicles_yolo(image, lanes):
 
     # Draw lane polygons
     for name, polygon in lanes.items():
-        cv2.polylines(annotated, [polygon], isClosed=True,
+        cv2.polylines(annotated, [polygon.astype(np.int32)], isClosed=True,
                       color=(0, 255, 0), thickness=2)
-        # Label lanes
-        # text_pos = tuple(polygon.mean(axis=0).astype(int)[0])
         text_pos = tuple(polygon.mean(axis=0).astype(int))
         cv2.putText(annotated, name, text_pos,
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
 
-    # Overlay total vehicle counts on top-left
-    y_offset = 30
-    for v_type, count in total_counts.items():
-        cv2.putText(annotated, f"{v_type}: {count}", (20, y_offset),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        y_offset += 30
-
     return annotated, vehicle_counts, total_counts
 
-
 # ---------------- Utility ----------------
-def resize_for_display(image, width=1920):
+
+
+def resize_for_display(image, width=1500):
     h, w = image.shape[:2]
     scale = width / w
     return cv2.resize(image, (width, int(h * scale)))
@@ -118,10 +121,10 @@ def resize_for_display(image, width=1920):
 
 # ---------------- Execution ----------------
 if __name__ == "__main__":
-    image_path = "samples/image1.jpg"
+    image_path = "samples/image2.avif"
     image, gray, binary, blurred, edges = preprocess_image(image_path)
 
-    lanes = detect_lanes(image)
+    lanes = load_lanes_from_config("lanes_config.json")
 
     annotated, vehicle_counts, total_counts = detect_vehicles_yolo(
         image, lanes)
@@ -159,7 +162,7 @@ if __name__ == "__main__":
     print("\n" + "-"*50 + "\n")
 
     # Show outputs resized for any screen
-    cv2.imshow("YOLO Detection", resize_for_display(annotated))
+    cv2.imshow("YOLO Detection", annotated)
     cv2.imshow("Original", resize_for_display(image))
     cv2.imshow("Grayscale", resize_for_display(gray))
     cv2.imshow("Binary", resize_for_display(binary))
