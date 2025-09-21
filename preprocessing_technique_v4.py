@@ -37,44 +37,55 @@ def find_lane_for_vehicle(center, lanes):
 drawing = False
 current_polygon = []
 all_polygons = {}
+scale = 1.0  # scale factor for display
 
 
 def mouse_callback(event, x, y, flags, param):
-    global current_polygon, all_polygons
+    global current_polygon, all_polygons, scale
 
-    if event == cv2.EVENT_LBUTTONDOWN:  # left click = add point
-        current_polygon.append((x, y))
-        print(f"Point added: {(x, y)}")
+    # Map mouse coordinates to original image
+    orig_x = int(x / scale)
+    orig_y = int(y / scale)
 
-    elif event == cv2.EVENT_RBUTTONDOWN:  # right click = finish polygon
+    if event == cv2.EVENT_LBUTTONDOWN:  # add point
+        current_polygon.append((orig_x, orig_y))
+        print(f"Point added: {(orig_x, orig_y)}")
+    elif event == cv2.EVENT_RBUTTONDOWN:  # finish polygon
         if len(current_polygon) >= 3:
             lane_name = input("Enter lane name (e.g., L1, L2, Side_Left): ")
             all_polygons[lane_name] = current_polygon.copy()
             print(f"Polygon saved for {lane_name}: {current_polygon}")
-        current_polygon = []
+        current_polygon.clear()
 
 
 def draw_polygons(img):
-    overlay = img.copy()
+    overlay = cv2.resize(img, None, fx=scale, fy=scale)
+
     # Saved polygons
     for name, polygon in all_polygons.items():
-        pts = np.array(polygon, np.int32).reshape((-1, 1, 2))
+        pts = (np.array(polygon) * scale).astype(np.int32).reshape((-1, 1, 2))
         cv2.polylines(overlay, [pts], True, (0, 255, 0), 2)
-        cv2.putText(overlay, name, tuple(
-            polygon[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+        cv2.putText(overlay, name, tuple((np.array(polygon[0]) * scale).astype(int)),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+
     # Current polygon
     if len(current_polygon) > 1:
-        pts = np.array(current_polygon, np.int32).reshape((-1, 1, 2))
+        pts = (np.array(current_polygon) *
+               scale).astype(np.int32).reshape((-1, 1, 2))
         cv2.polylines(overlay, [pts], False, (255, 0, 0), 2)
+
     return overlay
 
 
-def run_calibration(image_path="samples/image2.avif", config_path="lanes_config.json"):
-    global all_polygons, current_polygon
+def run_calibration(image_path="samples/image2.avif", config_path="lanes_config.json", display_width=1500):
+    global all_polygons, current_polygon, scale
     all_polygons = {}
     current_polygon = []
 
     img = cv2.imread(image_path)
+    h, w = img.shape[:2]
+    scale = display_width / w
+
     cv2.namedWindow("Lane Calibration")
     cv2.setMouseCallback("Lane Calibration", mouse_callback)
 
@@ -117,13 +128,11 @@ def detect_vehicles_yolo(image, lanes):
         for box in r.boxes:
             cls = int(box.cls[0])
             label = model.names[cls]
-
             if label in ["car", "bus", "truck", "motorcycle"]:
                 if label == "motorcycle":
                     label = "motorbike"
-
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
-                center = ((x1 + x2)//2, (y1 + y2)//2)
+                center = ((x1+x2)//2, (y1+y2)//2)
 
                 lane_name = find_lane_for_vehicle(center, lanes)
                 if lane_name:
@@ -151,16 +160,16 @@ def detect_vehicles_yolo(image, lanes):
 def resize_for_display(image, width=1500):
     h, w = image.shape[:2]
     scale = width / w
-    return cv2.resize(image, (width, int(h * scale)))
+    return cv2.resize(image, (width, int(h*scale)))
 
 
 # ---------------- Main ----------------
 if __name__ == "__main__":
-    mode = input("Enter mode (calibration then click c/detection then click d): ").strip().lower()
+    mode = input(
+        "Enter mode (calibration then click c/detection then click d): ").strip().lower()
 
     if mode == "c":
         run_calibration("samples/image2.avif", "lanes_config.json")
-
     elif mode == "d":
         image_path = "samples/image2.avif"
         image, gray, binary, blurred, edges = preprocess_image(image_path)
@@ -185,7 +194,7 @@ if __name__ == "__main__":
             print(f"  {icons[v_type]} {v_type}: {v_count}")
 
         # Show outputs
-        cv2.imshow("YOLO Detection", annotated)
+        cv2.imshow("YOLO Detection", resize_for_display(annotated))
         cv2.imshow("Original", resize_for_display(image))
         cv2.imshow("Grayscale", resize_for_display(gray))
         cv2.imshow("Binary", resize_for_display(binary))
@@ -193,3 +202,4 @@ if __name__ == "__main__":
         cv2.imshow("Edges", resize_for_display(edges))
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+# ---------------- End ----------------
