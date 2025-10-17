@@ -73,4 +73,6 @@ python detect.py
 
 Press **Q** to quit the live detection window.
 
-python3 preprocessing_technique.py
+python preprocessing_technique.py![alt text](image.png)
+
+uvicorn main:app --reload

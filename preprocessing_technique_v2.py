@@ -112,7 +112,7 @@ def detect_vehicles_yolo(image, lanes):
 
 
 # ---------------- Utility ----------------
-def resize_for_display(image, width=960):
+def resize_for_display(image, width=1300):
     h, w = image.shape[:2]
     scale = width / w
     return cv2.resize(image, (width, int(h * scale)))
@@ -120,7 +120,7 @@ def resize_for_display(image, width=960):
 
 # ---------------- Execution ----------------
 if __name__ == "__main__":
-    image_path = "samples/image2.avif"
+    image_path = "samples/img1.jpg"
     image, gray, binary, blurred, edges = preprocess_image(image_path)
 
     lanes = detect_lanes(image)
