@@ -75,7 +75,6 @@ def detect_vehicles(image):
 
     return image, total_vehicles, lane_counts, emergency_detected
 
-
 # Video capture
 # cap = cv2.VideoCapture(0)  # webcam
 cap = cv2.VideoCapture("samples/video6.mp4")  # video file
