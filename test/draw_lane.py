@@ -52,7 +52,7 @@ def draw_polygons(img):
 
 
 if __name__ == "__main__":
-    image_path = "samples/image2.avif"  # <-- change to your intersection snapshot
+    image_path = "samples/image2.avif"  # change to your intersection snapshot
     img = cv2.imread(image_path)
     cv2.namedWindow("Lane Calibration")
     cv2.setMouseCallback("Lane Calibration", mouse_callback)
