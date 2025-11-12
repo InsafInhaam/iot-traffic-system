@@ -317,3 +317,25 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# lane 1 -> 25  // north -> green
+# lane 2 -> 6   // east -> red
+# lane 3 -> 8   // south -> red
+# lane 4 -> 3   // west -> green 
+
+# http://192.168.1.7/control?lane=north&color=green&state
+
+# open cv -> capture image
+
+# yolo -> detect vechicle , classific objects
+
+# fastapi -> python framework (logic conditions = ) desicions
+
+# http://192.168.1.7/control?lane=north&color=green&state
+
+
+
+# traffic -> timer 45 auto method
+# smart method -> 
