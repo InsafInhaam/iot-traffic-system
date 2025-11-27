@@ -169,9 +169,9 @@ if __name__ == "__main__":
         "Enter mode (calibration then click c/detection then click d): ").strip().lower()
 
     if mode == "c":
-        run_calibration("samples/image2.avif", "lanes_config.json")
+        run_calibration("samples/img1.jpg", "lanes_config.json")
     elif mode == "d":
-        image_path = "samples/image2.avif"
+        image_path = "samples/img1.jpg"
         image, gray, binary, blurred, edges = preprocess_image(image_path)
         lanes = load_lanes_from_config("lanes_config.json")
         annotated, vehicle_counts, total_counts = detect_vehicles_yolo(
