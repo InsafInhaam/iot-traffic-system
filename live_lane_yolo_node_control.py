@@ -292,7 +292,8 @@ def run_webcam_detection(device_index=1):
     lanes_np = {}
     for name, pts in all_lanes[image_key].items():
         # lanes_np[name] = np.array(pts, dtype=np.int32)
-        lanes_np[name] = np.array([[int(p[0]), int(p[1])] for p in pts], dtype=np.int32)
+        lanes_np[name] = np.array([[int(p[0]), int(p[1])]
+                                  for p in pts], dtype=np.int32)
 
     lane_names = list(lanes_np.keys())
     controller = AdaptiveController(lane_names)
@@ -343,7 +344,7 @@ def run_webcam_detection(device_index=1):
                     # cx = (x1 + x2)//2
                     # cy = (y1 + y2)//2
                     cx = (x1 + x2)//2
-                    cy = y2 - 5 
+                    cy = y2 - 5
                     lane = find_lane_for_center((cx, cy), lanes_np)
                     # draw the box and label
                     cv2.rectangle(annotated, (x1, y1),
